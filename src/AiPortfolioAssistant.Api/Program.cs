@@ -1,3 +1,5 @@
+using System.Text.Json;
+using AiPortfolioAssistant.Api.Knowledge;
 using Qdrant.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +29,14 @@ app.MapGet("/qdrant/collections", async (QdrantClient qdrant) =>
 {
     var collections = await qdrant.ListCollectionsAsync();
     return Results.Ok(collections);
+});
+
+app.MapGet("/knowledge", async (IWebHostEnvironment env) =>
+{
+    var path = Path.Combine(env.ContentRootPath, "Data", "knowledge.json");
+    await using var stream = File.OpenRead(path);
+    var items = await JsonSerializer.DeserializeAsync<List<KnowledgeItem>>(stream, JsonSerializerOptions.Web);
+    return Results.Ok(items);
 });
 
 app.Run();

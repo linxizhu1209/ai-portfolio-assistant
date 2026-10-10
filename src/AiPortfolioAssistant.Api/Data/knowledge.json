@@ -1,0 +1,23 @@
+[
+  {
+    "id": "e84c57fa-fe3e-46af-b8dc-9e5974c22284",
+    "category": "hobby",
+    "title": "요리",
+    "content": "요리하는 것을 즐긴다. 주 1회 요리학원에 다니며 요리를 배우고 있다.",
+    "sourceUrl": null
+  },
+  {
+    "id": "289cf4cc-2c62-4919-9c53-ef6e5a4716fd",
+    "category": "hobby",
+    "title": "헬스",
+    "content": "근육을 기르기 위해 헬스장에 다니고 있다. 꾸준히 운동해서 벌크업하는 것이 목표다.",
+    "sourceUrl": null
+  },
+  {
+    "id": "9830a5da-d04c-4edf-9ad6-f66cdacf5d40",
+    "category": "hobby",
+    "title": "중국어",
+    "content": "언어 배우는 것을 좋아하며, 특히 중국어 공부를 좋아한다. 최근 HSK 5급 자격증을 취득했다. 중국어를 꾸준히 배워 중국 여행이나 비즈니스에서 활용하는 것이 목표다.",
+    "sourceUrl": null
+  }
+]
