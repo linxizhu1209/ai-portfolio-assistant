@@ -75,5 +75,18 @@ app.MapPost("/knowledge/index", async (IWebHostEnvironment env, GeminiEmbeddingC
     return Results.Ok(new { indexed = points.Count });
 });
 
+app.MapGet("/search", async (string q, GeminiEmbeddingClient embedder, QdrantClient qdrant) =>
+{
+    var vector = await embedder.EmbedAsync($"task: search result | query: {q}");
+    var results = await qdrant.QueryAsync(KnowledgeCollection, query: vector, limit: 3, payloadSelector: true);
+
+    return Results.Ok(results.Select(r => new
+    {
+        score = r.Score,
+        title = r.Payload["title"].StringValue,
+        content = r.Payload["content"].StringValue
+    }));
+});
+
 
 app.Run();
