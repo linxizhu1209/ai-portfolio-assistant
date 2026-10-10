@@ -1,6 +1,7 @@
 using System.Text.Json;
 using AiPortfolioAssistant.Api.Knowledge;
 using Qdrant.Client;
+using AiPortfolioAssistant.Api.Embeddings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,9 @@ builder.Services.AddOpenApi();
 var qdrantHost = builder.Configuration["Qdrant:Host"] ?? "localhost";
 var qdrantPort = builder.Configuration.GetValue("Qdrant:Port", 6334);
 builder.Services.AddSingleton(new QdrantClient(qdrantHost, qdrantPort));
+
+builder.Services.AddHttpClient<GeminiEmbeddingClient>(client =>
+client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/"));
 
 var app = builder.Build();
 
@@ -37,6 +41,12 @@ app.MapGet("/knowledge", async (IWebHostEnvironment env) =>
     await using var stream = File.OpenRead(path);
     var items = await JsonSerializer.DeserializeAsync<List<KnowledgeItem>>(stream, JsonSerializerOptions.Web);
     return Results.Ok(items);
+});
+
+app.MapGet("/embed", async (string text, GeminiEmbeddingClient embedder) =>
+{
+    var vector = await embedder.EmbedAsync(text);
+    return Results.Ok(new { length = vector.Length, first5 = vector.Take(5) });
 });
 
 app.Run();
