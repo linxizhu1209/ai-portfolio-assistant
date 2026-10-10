@@ -2,6 +2,7 @@ using AiPortfolioAssistant.Api.Knowledge;
 using Qdrant.Client;
 using AiPortfolioAssistant.Api.Embeddings;
 using Qdrant.Client.Grpc;
+using AiPortfolioAssistant.Api.Llm;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,10 @@ builder.Services.AddSingleton(new QdrantClient(qdrantHost, qdrantPort));
 
 builder.Services.AddHttpClient<GeminiEmbeddingClient>(client =>
 client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/"));
+
+builder.Services.AddHttpClient<GeminiChatClient>(client =>
+    client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/"));
+
 
 var app = builder.Build();
 
@@ -88,5 +93,12 @@ app.MapGet("/search", async (string q, GeminiEmbeddingClient embedder, QdrantCli
     }));
 });
 
+app.MapGet("/chat", async (string q, GeminiChatClient llm) =>
+{
+    var answer = await llm.GenerateAsync(
+        "당신은 포트폴리오 주인에 대한 질문에 답하는 어시스턴트입니다. 한국어로 답하세요.",
+        q);
+    return Results.Ok(new { answer });
+});
 
 app.Run();
