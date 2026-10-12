@@ -1,3 +1,5 @@
+using AiPortfolioAssistant.Api.Persistence;
+using Microsoft.EntityFrameworkCore;
 using AiPortfolioAssistant.Api.Rag;
 using AiPortfolioAssistant.Api.Knowledge;
 using Qdrant.Client;
@@ -21,6 +23,8 @@ client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/"));
 builder.Services.AddHttpClient<GeminiChatClient>(client =>
     client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/"));
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
 var app = builder.Build();
 
