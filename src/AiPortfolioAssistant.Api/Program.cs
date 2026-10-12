@@ -1,3 +1,4 @@
+using AiPortfolioAssistant.Api.Rag;
 using AiPortfolioAssistant.Api.Knowledge;
 using Qdrant.Client;
 using AiPortfolioAssistant.Api.Embeddings;
@@ -99,6 +100,36 @@ app.MapGet("/chat", async (string q, GeminiChatClient llm) =>
         "당신은 포트폴리오 주인에 대한 질문에 답하는 어시스턴트입니다. 한국어로 답하세요.",
         q);
     return Results.Ok(new { answer });
+});
+
+app.MapGet("/ask", async (string q, GeminiEmbeddingClient embedder, QdrantClient qdrant, GeminiChatClient llm, IConfiguration config) => 
+{
+    var threshold = config.GetValue("Rag:ScoreThreshold", 0.65f);
+    var topK = config.GetValue("Rag:TopK", 3);
+
+    // 질문 임베딩 -> 검색
+    var vector = await embedder.EmbedAsync($"task: search result | query: {q}");
+    var results = await qdrant.QueryAsync(KnowledgeCollection, query: vector, limit: (ulong)topK, payloadSelector: true);
+
+    // threshold 필터
+    var sources = results.Where(r => r.Score >= threshold).Select(r => new {
+        title = r.Payload["title"].StringValue,
+        content = r.Payload["content"].StringValue,
+        score = r.Score
+    })
+    .ToList();
+
+    // 근거가 없으면 LLM 호출 x
+    if (sources.Count == 0)
+    {
+        return Results.Ok(new { answer = RagPrompt.NoAnswer, answered = false, sources });
+    }
+
+    // 프롬프트 조립 -> LLM 호출
+    var userMessage = RagPrompt.BuildUserMessage(q, sources.Select(s => (s.title, s.content)));
+    var answer = (await llm.GenerateAsync(RagPrompt.SystemInstruction, userMessage)).Trim();
+
+    return Results.Ok(new { answer, answered = answer != RagPrompt.NoAnswer, sources });
 });
 
 app.Run();
